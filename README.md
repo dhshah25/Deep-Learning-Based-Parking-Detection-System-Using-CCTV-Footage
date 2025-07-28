@@ -61,6 +61,7 @@ Includes:
 - Limitations and future work
 
 📄 **File**: `4_Project_Report.pdf`
+[Download Project Report (PDF)](./4_Project_Report.pdf)
 
 ---
 
