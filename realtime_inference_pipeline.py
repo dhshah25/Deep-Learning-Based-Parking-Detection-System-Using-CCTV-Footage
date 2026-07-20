@@ -53,7 +53,7 @@ Slot Configuration (parking_slots.json)
       ]
     }
 
-Author : Dhaval Shah
+Author : Dhairya Shah
 License: All rights reserved – portfolio / learning reference only.
 """
 

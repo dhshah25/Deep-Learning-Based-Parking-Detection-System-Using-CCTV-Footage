@@ -465,5 +465,5 @@ A comprehensive PDF report covering objectives, model architecture deep-dives, e
 ---
 
 <p align="center">
-  <b>Built by <a href="https://github.com/dhshah25">Dhaval Shah</a></b>
+  <b>Built by <a href="https://github.com/dhshah25">Dhairya Shah</a></b>
 </p>
