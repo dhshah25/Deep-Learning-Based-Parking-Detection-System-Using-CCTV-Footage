@@ -1,0 +1,29 @@
+{
+  "_comment": "Example parking slot configuration. Define each slot as a polygon with vertex coordinates matching your camera's perspective. Use a tool like LabelMe or CVAT to annotate a reference frame.",
+  "slots": [
+    {
+      "id": "A1",
+      "polygon": [[100, 200], [300, 200], [300, 400], [100, 400]]
+    },
+    {
+      "id": "A2",
+      "polygon": [[320, 200], [520, 200], [520, 400], [320, 400]]
+    },
+    {
+      "id": "A3",
+      "polygon": [[540, 200], [740, 200], [740, 400], [540, 400]]
+    },
+    {
+      "id": "B1",
+      "polygon": [[100, 420], [300, 420], [300, 620], [100, 620]]
+    },
+    {
+      "id": "B2",
+      "polygon": [[320, 420], [520, 420], [520, 620], [320, 620]]
+    },
+    {
+      "id": "B3",
+      "polygon": [[540, 420], [740, 420], [740, 620], [540, 620]]
+    }
+  ]
+}
