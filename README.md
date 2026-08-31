@@ -15,9 +15,8 @@
 - [Solution Overview](#solution-overview)
 - [Architecture](#architecture)
 - [Models Trained & Compared](#models-trained--compared)
-  - [1 · YOLOv11 (CLI)](#1--yolov11-ultralytics-cli)
-  - [2 · YOLOv8 (Python API)](#2--yolov8-ultralytics-python-api)
-  - [3 · RF-DETR (Transformer)](#3--rf-detr-roboflow-detection-transformer)
+  - [1 · YOLOv11 (Training & Deployment)](#1--yolov11-training--deployment)
+  - [2 · RF-DETR (Transformer)](#2--rf-detr-roboflow-detection-transformer)
 - [Performance Comparison](#performance-comparison)
 - [Real-Time Inference Pipeline](#real-time-inference-pipeline)
   - [How It Works](#how-it-works)
@@ -46,7 +45,7 @@ Urban parking is a **$100B+ global market challenge**. Drivers spend an average 
 | Aspect | Detail |
 |---|---|
 | **Input** | Top-view CCTV footage (static camera, RTSP stream, or video file) |
-| **Detection** | Fine-tuned YOLOv8, YOLOv11, and RF-DETR models classify each vehicle bounding box |
+| **Detection** | Fine-tuned YOLOv11 and RF-DETR models classify each vehicle bounding box |
 | **Occupancy Logic** | Detection centroids are matched to user-defined slot polygons via ray-casting |
 | **Temporal Smoothing** | Hysteresis-based state machine prevents flickering from transient occlusions |
 | **Output** | Live annotated overlay, console status, or saved video with per-slot occupancy |
@@ -103,14 +102,14 @@ All three models were fine-tuned on the **PKLot** dataset (see [Dataset](#datase
 
 ---
 
-### 1 · YOLOv11 (Ultralytics CLI)
+### 1 · YOLOv11 (Training & Deployment)
 
-> **Notebook**: [`1_YOLOv11_CLI.ipynb`](./1_YOLOv11_CLI.ipynb)
+> **Notebook**: [`1_YOLOv11_Training_and_Deployment.ipynb`](./1_YOLOv11_Training_and_Deployment.ipynb)
 
 | Parameter | Value |
 |---|---|
 | Base Model | `yolo11s.pt` (small variant) |
-| Training Method | Ultralytics CLI (`yolo task=detect mode=train`) |
+| Training Method | Ultralytics Python API (`model.train()`) |
 | Input Resolution | 640 × 640 |
 | Epochs | 10 |
 | GPU | NVIDIA T4 (Google Colab) |
@@ -125,44 +124,15 @@ All three models were fine-tuned on the **PKLot** dataset (see [Dataset](#datase
 | **mAP@0.50:0.95** | **0.80** |
 
 **What this notebook demonstrates**:
-- CLI-based model training workflow (no Python API code required)
-- Confusion matrix, training loss curves, and validation batch predictions
-- Inference on held-out test images with annotated bounding boxes
+- Full model training workflow
+- Validation metrics and training loss curves
+- **ONNX and INT8 export using TensorRT for Jetson edge deployment**
 
 ---
 
-### 2 · YOLOv8 (Ultralytics Python API)
+### 2 · RF-DETR (Roboflow Detection Transformer)
 
-> **Notebook**: [`2_YOLOv8_API.ipynb`](./2_YOLOv8_API.ipynb)
-
-| Parameter | Value |
-|---|---|
-| Base Model | `yolov8s.pt` (small variant) |
-| Training Method | Ultralytics Python API (`model.train()`) |
-| Input Resolution | 640 × 640 |
-| Epochs | 10 |
-| GPU | NVIDIA T4 (Google Colab) |
-
-**Key Results**:
-
-| Metric | Value |
-|---|---|
-| **Precision (P)** | 0.96 |
-| **Recall (R)** | 0.96 |
-| **mAP@0.50** | **0.98** |
-| **mAP@0.50:0.95** | **0.79** |
-
-**What this notebook demonstrates**:
-- Full Python API training workflow (`model.train()`, `model.val()`, `model.predict()`)
-- Extended diagnostic visualizations: F1 curve, Precision curve, Recall curve, PR curve, normalized confusion matrix, label correlogram
-- Programmatic inference and annotated prediction display
-- Deployment-ready code structure for integration into downstream applications
-
----
-
-### 3 · RF-DETR (Roboflow Detection Transformer)
-
-> **Notebook**: [`3_RF_DETR_Transformer.ipynb`](./3_RF_DETR_Transformer.ipynb)
+> **Notebook**: [`2_RF_DETR_Transformer.ipynb`](./2_RF_DETR_Transformer.ipynb)
 
 | Parameter | Value |
 |---|---|
@@ -185,9 +155,7 @@ All three models were fine-tuned on the **PKLot** dataset (see [Dataset](#datase
 **What this notebook demonstrates**:
 - **Custom dataset conversion**: YOLO-format labels → COCO-format JSON (annotation parser written from scratch)
 - **Transformer-based detection**: DINOv2 vision backbone with deformable attention
-- **Advanced training techniques**: mixed-precision (FP16), gradient accumulation, cosine LR warmup, EMA weight smoothing
 - Evaluation via `supervision` library: confusion matrix, mAP plot, annotated detection grid (3×3)
-- Model checkpoint saving (full model + `model_module.pth` for deployment)
 
 ---
 
@@ -196,10 +164,9 @@ All three models were fine-tuned on the **PKLot** dataset (see [Dataset](#datase
 | Model | Architecture | mAP@0.50 | mAP@0.50:0.95 | Precision | Recall | Training Epochs | GPU Used |
 |---|---|---|---|---|---|---|---|
 | **YOLOv11s** | CNN (CSPDarknet) | **0.98** | **0.80** | 0.97 | 0.96 | 10 | T4 |
-| **YOLOv8s** | CNN (CSPDarknet) | **0.98** | 0.79 | 0.96 | 0.96 | 10 | T4 |
 | **RF-DETR Base** | Transformer (DINOv2) | — | — | — | — | 3 | A100 |
 
-> **Key Insight**: Both YOLO variants achieve near-identical performance (~98% mAP@0.50) on the PKLot dataset, suggesting the task is well-suited for single-stage detectors at this resolution. The RF-DETR transformer model shows strong convergence (43% loss reduction) in just 3 epochs, indicating excellent transfer learning from the DINOv2 backbone — a promising direction for more complex parking scenarios with heavy occlusion.
+> **Key Insight**: YOLOv11 achieves excellent performance (~98% mAP@0.50) on the PKLot dataset, suggesting the task is well-suited for single-stage detectors at this resolution. The RF-DETR transformer model shows strong convergence (43% loss reduction) in just 3 epochs, indicating excellent transfer learning from the DINOv2 backbone — a promising direction for more complex parking scenarios with heavy occlusion.
 
 ---
 
@@ -214,7 +181,7 @@ A **production-grade Python pipeline** that connects a trained model to a live v
 1. **Frame Sampling** — Reads frames from any OpenCV-compatible source (webcam, RTSP IP camera, video file) at a configurable interval (default: 500ms) to reduce GPU load without sacrificing responsiveness.
 
 2. **Object Detection** — Each sampled frame is passed through a pluggable detector backend:
-   - `ultralytics` — for YOLOv8 / YOLOv11 `.pt` weights
+   - `ultralytics` — for YOLOv11 `.pt` weights
    - `torch_script` — for exported TorchScript models (RF-DETR, custom architectures)
 
 3. **Slot Matching (Point-in-Polygon)** — Detection bounding-box centroids are tested against user-defined slot polygons using a ray-casting algorithm. If any detection centroid falls inside a slot polygon, the slot is a candidate for "occupied."
@@ -343,7 +310,7 @@ Most modern IP cameras support **RTSP** (Real Time Streaming Protocol). To integ
 | **Source** | Federal University of Paraná (UFPR), Brazil |
 | **Content** | Top-view images of parking lots under varying weather/lighting conditions |
 | **Classes** | 2 — `space-empty`, `space-occupied` |
-| **Format** | YOLO (used directly for YOLOv8/v11); converted to COCO for RF-DETR |
+| **Format** | YOLO (used directly for YOLOv11); converted to COCO for RF-DETR |
 | **Resolution** | 640 × 640 (pre-resized) |
 | **Splits** | Train / Validation / Test |
 
@@ -354,9 +321,8 @@ Most modern IP cameras support **RTSP** (Real Time Streaming Protocol). To integ
 ```
 Deep-Learning-Based-Parking-Detection-System-Using-CCTV-Footage/
 │
-├── 1_YOLOv11_CLI.ipynb               # YOLOv11 training via Ultralytics CLI
-├── 2_YOLOv8_API.ipynb                 # YOLOv8 training via Python API (with extended diagnostics)
-├── 3_RF_DETR_Transformer.ipynb        # RF-DETR transformer fine-tuning (YOLO→COCO conversion)
+├── 1_YOLOv11_Training_and_Deployment.ipynb # YOLOv11 training and TensorRT ONNX/INT8 export
+├── 2_RF_DETR_Transformer.ipynb             # RF-DETR transformer fine-tuning (YOLO→COCO conversion)
 ├── realtime_inference_pipeline.py     # Production real-time occupancy detection pipeline
 ├── 4_Project_Report.pdf               # Detailed project report (PDF)
 ├── requirements.txt                   # Python dependencies
@@ -393,7 +359,7 @@ pip install -r requirements.txt
 Open any notebook in **Google Colab** (recommended for free GPU access) or locally via Jupyter:
 
 ```bash
-jupyter notebook 1_YOLOv11_CLI.ipynb
+jupyter notebook 1_YOLOv11_Training_and_Deployment.ipynb
 ```
 
 ### Run the Real-Time Pipeline
@@ -414,7 +380,7 @@ python realtime_inference_pipeline.py \
 |---|---|
 | **Deep Learning** | Transfer learning, fine-tuning pre-trained models, loss function analysis, hyperparameter tuning |
 | **Computer Vision** | Object detection (single-stage & transformer-based), bounding-box regression, NMS, IoU metrics |
-| **Model Architectures** | YOLOv8, YOLOv11 (CNN/CSPDarknet), RF-DETR (DINOv2 transformer backbone + deformable attention) |
+| **Model Architectures** | YOLOv11 (CNN/CSPDarknet), RF-DETR (DINOv2 transformer backbone + deformable attention) |
 | **Training Techniques** | Mixed-precision training (FP16), gradient accumulation, cosine LR warmup, EMA weight smoothing |
 | **Data Engineering** | YOLO ↔ COCO format conversion, dataset splitting, annotation parsing |
 | **Evaluation & Metrics** | mAP@0.50, mAP@0.50:0.95, Precision, Recall, F1-score, confusion matrix, PR curves |
@@ -440,13 +406,11 @@ python realtime_inference_pipeline.py \
 ## References
 
 1. [PKLot Dataset](http://www.inf.ufpr.br/lesoliv/PKLot/) — Federal University of Paraná
-2. [Ultralytics YOLOv8 Documentation](https://docs.ultralytics.com/)
-3. [Ultralytics YOLOv11 Documentation](https://docs.ultralytics.com/models/yolo11/)
-4. [RF-DETR — Roboflow](https://github.com/roboflow/rfdetr)
-5. [Supervision Library](https://github.com/roboflow/supervision)
-6. [DINOv2 — Meta AI](https://arxiv.org/abs/2304.07193)
-7. [Albumentations — Data Augmentation](https://arxiv.org/abs/1809.06839)
-8. [YOLOv8 — IEEE Paper](https://ieeexplore.ieee.org/document/10533619/)
+2. [Ultralytics YOLOv11 Documentation](https://docs.ultralytics.com/models/yolo11/)
+3. [RF-DETR — Roboflow](https://github.com/roboflow/rfdetr)
+4. [Supervision Library](https://github.com/roboflow/supervision)
+5. [DINOv2 — Meta AI](https://arxiv.org/abs/2304.07193)
+6. [Albumentations — Data Augmentation](https://arxiv.org/abs/1809.06839)
 
 ---
 
